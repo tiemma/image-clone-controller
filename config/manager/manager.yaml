@@ -22,6 +22,13 @@ spec:
       labels:
         control-plane: controller-manager
     spec:
+      imagePullSecrets:
+        - name: dockercred
+      volumes:
+        - name: dockercred
+          secret:
+            secretName: dockercred
+            defaultMode: 0400
       containers:
       - command:
         - /manager
@@ -29,6 +36,9 @@ spec:
         - --enable-leader-election
         image: controller:latest
         name: manager
+        volumeMounts:
+          - name: dockercred
+            mountPath: "/"
         resources:
           limits:
             cpu: 100m
