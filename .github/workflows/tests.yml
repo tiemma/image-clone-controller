@@ -1,10 +1,4 @@
-name: Go
-
-on:
-  push:
-    branches: [ init ]
-  pull_request:
-    branches: [ init ]
+name: Build & Test
 
 jobs:
 
