@@ -230,10 +230,17 @@ spec:
         - /manager
         env:
         - name: DOCKER_CONFIG
-          value: /
+          value: /etc/docker
         - name: REPO_URL
           value: docker.io/k8stest123
         image: k8stest123/image-clone-controller:latest
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - cp /var/docker/.dockerconfigjson /etc/docker/config.json
         name: manager
         resources:
           limits:
@@ -242,6 +249,11 @@ spec:
           requests:
             cpu: 100m
             memory: 20Mi
+        volumeMounts:
+        - mountPath: /var/docker
+          name: dockerconfig
+        - mountPath: /etc/docker
+          name: configpath
       imagePullSecrets:
       - name: dockercred
       terminationGracePeriodSeconds: 10
@@ -249,6 +261,8 @@ spec:
       - name: dockerconfig
         secret:
           secretName: dockercred
+      - emptyDir: {}
+        name: configpath
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor

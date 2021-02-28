@@ -28,6 +28,8 @@ spec:
         - name: dockerconfig
           secret:
             secretName: dockercred
+        - name: configpath
+          emptyDir: {}
       containers:
       - command:
         - /manager
@@ -35,14 +37,23 @@ spec:
         - --enable-leader-election
         image: controller:latest
         name: manager
+        lifecycle:
+          postStart:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - cp /var/docker/.dockerconfigjson /etc/docker/config.json
         env:
           - name: DOCKER_CONFIG
-            value: "/"
+            value: "/etc/docker"
           - name: REPO_URL
             value: "docker.io/k8stest123"
-#        volumeMounts:
-#          - name: dockerconfig
-#            mountPath: "/"
+        volumeMounts:
+          - name: dockerconfig
+            mountPath: "/var/docker"
+          - name: configpath
+            mountPath: "/etc/docker"
         resources:
           limits:
             cpu: 100m
