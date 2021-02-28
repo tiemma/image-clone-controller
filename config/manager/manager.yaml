@@ -25,7 +25,7 @@ spec:
       imagePullSecrets:
         - name: dockercred
       volumes:
-        - name: dockercred
+        - name: config.json
           secret:
             secretName: dockercred
             defaultMode: 0400
@@ -36,8 +36,13 @@ spec:
         - --enable-leader-election
         image: controller:latest
         name: manager
+        env:
+          - name: DOCKER_CONFIG
+            value: "/"
+          - name: REPO_URL
+            value: "docker.io/k8stest123"
         volumeMounts:
-          - name: dockercred
+          - name: config.json
             mountPath: "/"
         resources:
           limits:
