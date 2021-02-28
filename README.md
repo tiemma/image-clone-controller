@@ -27,7 +27,7 @@ You can then create a secret using the following command on the file previously 
 ```bash
     # Change secret_name and config_path as necessary, config_path should be `$HOME/.docker/config.json`
     # secret_name should be dockercred as seen in the deployment spec
-    kubectl create secret generic dockercred -n image-clone-controller-system --from-file=.dockerconfigjson=<config_path> --type=kubernetes.io/dockerconfigjson
+    kubectl create secret generic dockercred -n image-clone-controller-system --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
 ```
 
 Follow the instructions [here](https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-files-from-a-pod) to mount the secrets as a file
@@ -65,7 +65,7 @@ If you do not have kustomize, you can apply directly using
 
 Do not forget to create the secret named `dockercred` based on your docker access configuration
 ```bash
-    kubectl create secret generic dockercred -n image-clone-controller-system --from-file=.dockerconfigjson=<config_path> --type=kubernetes.io/dockerconfigjson
+    kubectl create secret generic dockercred -n image-clone-controller-system --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
 ```
 
 # Running tests
