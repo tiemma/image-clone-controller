@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"github.com/Tiemma/image-clone-controller/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	ctrlMetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 )
@@ -13,7 +14,7 @@ var (
 		},
 	)
 
-	FailedImageClones = prometheus.NewCounterVec(
+	failedImageClones = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "image_clone_failures",
 			Help: "Number of failed image clones",
@@ -22,7 +23,11 @@ var (
 	)
 )
 
+func UpdateFailedImageClonesMetric(name, namespace, kind, image string, errType errors.ErrType) {
+	failedImageClones.WithLabelValues(name, namespace, kind, image, string(errType)).Add(1)
+}
+
 func Init() {
 	// Register custom metrics with the global prometheus registry
-	ctrlMetrics.Registry.MustRegister(ImageCloneTotal, FailedImageClones)
+	ctrlMetrics.Registry.MustRegister(ImageCloneTotal, failedImageClones)
 }

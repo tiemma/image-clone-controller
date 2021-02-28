@@ -50,7 +50,7 @@ func (r *DeploymentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	deployment := &appsv1.Deployment{}
 
 	if err := r.Client.Get(ctx, req.NamespacedName, deployment); err != nil {
-		metrics.FailedImageClones.WithLabelValues(deployment.Name, deployment.Namespace, deployment.Kind, "", string(errors.SpecGet))
+		metrics.UpdateFailedImageClonesMetric(deployment.Name, deployment.Namespace, deployment.Kind, "", errors.SpecGet)
 
 		return ctrl.Result{
 			RequeueAfter: r.RetryDelay,
@@ -63,14 +63,14 @@ func (r *DeploymentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 
 	image, errType := docker.MustCacheAndModifyPodImage(&deployment.Spec.Template.Spec, r.KubeServerVersion)
 	if errType != "" {
-		metrics.FailedImageClones.WithLabelValues(deployment.Name, deployment.Namespace, deployment.Kind, image, string(errType)).Add(1)
+		metrics.UpdateFailedImageClonesMetric(deployment.Name, deployment.Namespace, deployment.Kind, image, errType)
 		return ctrl.Result{
 			RequeueAfter: r.RetryDelay,
 		}, errors.ErrorCloningImage(image, errType)
 	}
 
 	if err := r.Client.Update(ctx, deployment); err != nil {
-		metrics.FailedImageClones.WithLabelValues(deployment.Name, deployment.Namespace, deployment.Kind, "", string(errors.SpecUpdate)).Add(1)
+		metrics.UpdateFailedImageClonesMetric(deployment.Name, deployment.Namespace, deployment.Kind, "", errors.SpecUpdate)
 		return ctrl.Result{
 			RequeueAfter: r.RetryDelay,
 		}, errors.ErrorUpdatingResource(deployment.Name, deployment.Namespace, deployment.Kind, err)
