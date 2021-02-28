@@ -3,6 +3,12 @@
 This controller clones docker images from other repositories
 into another specified docker repository via the REPO_URL variable.
 
+![Tests](https://github.com/tiemma/image-clone-controller/actions/workflows/tests.yml/badge.svg)
+![Deploy](https://github.com/tiemma/image-clone-controller/actions/workflows/deploy.yml/badge.svg)
+![Release](https://badges.fyi/github/latest-release/tiemma/image-clone-controller)
+![License](https://badges.fyi/github/license/tiemma/image-clone-controller)
+
+
 # Demo
 
 [![asciicast](https://asciinema.org/a/395261.svg)](https://asciinema.org/a/395261)
