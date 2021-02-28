@@ -3,6 +3,9 @@
 This controller clones docker images from other repositories
 into another specified docker repository via the REPO_URL variable.
 
+# Demo
+
+[![asciicast](https://asciinema.org/a/395261.svg)](https://asciinema.org/a/395261)
 
 # Environment configuration
 
