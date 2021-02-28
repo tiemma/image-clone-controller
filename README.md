@@ -57,6 +57,16 @@ You can run the controller within a Kubernetes cluster by running the following 
 
 It would parse all the configurations with kustomize and apply.
 
+If you do not have kustomize, you can apply directly using
+
+```bash
+    kubectl apply -f config/k8s/deploy.yaml
+```
+
+Do not forget to create the secret named `dockercred` based on your docker access configuration
+```bash
+    kubectl create secret generic dockercred -n image-clone-controller-system --from-file=.dockerconfigjson=<config_path> --type=kubernetes.io/dockerconfigjson
+```
 
 # Running tests
 
