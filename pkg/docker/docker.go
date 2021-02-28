@@ -40,12 +40,25 @@ func getImageManifest(ref name.Reference) (containerRegistry.Image, error) {
 	return img, err
 }
 
+func isAlreadyCached(image string) bool {
+	isCached := strings.Contains(image, repoURL)
+	if isCached {
+		logger.Info(fmt.Sprintf("Image %s is already cached, ignoring...", image))
+	}
+
+	return isCached
+}
+
 func MustCacheAndModifyPodImage(podSpec *v1.PodSpec, k8sVersion string) (string, errors.ErrType) {
 	images := map[name.Reference]remote.Taggable{}
 
 	// Duplicate images are not a problem since their tags would make them differ
 	// as opposed to an overwrite if it were only the image url
 	for idx, c := range podSpec.Containers {
+		if isAlreadyCached(c.Image) {
+			continue
+		}
+
 		ref, err := getReference(c.Image)
 		if err != nil {
 			return c.Image, errors.ImageReference
@@ -55,12 +68,17 @@ func MustCacheAndModifyPodImage(podSpec *v1.PodSpec, k8sVersion string) (string,
 		if err != nil {
 			return c.Image, errors.ImageManifest
 		}
+
 		images[getCacheImageReference(ref)] = img
 		podSpec.Containers[idx].Image = getCacheImageURL(ref)
 	}
 
 	if semver.Compare(k8sVersion, ephemeralContainerMinimumSupportedVersion) == 1 {
 		for idx, ec := range podSpec.EphemeralContainers {
+			if isAlreadyCached(ec.Image) {
+				continue
+			}
+
 			ref, err := getReference(ec.Image)
 			if err != nil {
 				return ec.Image, errors.ImageReference
@@ -76,6 +94,10 @@ func MustCacheAndModifyPodImage(podSpec *v1.PodSpec, k8sVersion string) (string,
 	}
 
 	for idx, ic := range podSpec.InitContainers {
+		if isAlreadyCached(ic.Image) {
+			continue
+		}
+
 		ref, err := getReference(ic.Image)
 		if err != nil {
 			return ic.Image, errors.ImageReference
@@ -89,7 +111,7 @@ func MustCacheAndModifyPodImage(podSpec *v1.PodSpec, k8sVersion string) (string,
 		podSpec.EphemeralContainers[idx].Image = getCacheImageURL(ref)
 	}
 
-	return "", mustCacheImages(images)
+	return mustCacheImages(images)
 }
 
 func getReference(image string) (name.Reference, error) {
@@ -118,17 +140,24 @@ func getCacheImageReference(ref name.Reference) name.Reference {
 	return ref
 }
 
-func mustCacheImages(images map[name.Reference]remote.Taggable) errors.ErrType {
+func mustCacheImages(images map[name.Reference]remote.Taggable) (string, errors.ErrType) {
 	imageCount := len(images)
-	logger.Info(fmt.Sprintf("Caching %d image(s): %s", imageCount, images))
+	if len(images) == 0 {
+		logger.Info("No new images found")
 
-	err := remote.MultiWrite(images, getAuthConfig()...)
-	if err != nil {
-		logger.Error(err, "error occurred writing images")
-		return errors.ImageWrite
+		return "", ""
 	}
 
-	metrics.ImageCloneTotal.Add(float64(imageCount))
+	logger.Info(fmt.Sprintf("Caching %d image(s): %s", imageCount, images))
 
-	return ""
+	for ref, img := range images {
+		err := remote.Write(ref, img.(containerRegistry.Image), getAuthConfig()...)
+		if err != nil {
+			logger.Error(err, "error occurred writing images")
+			return ref.Name(), errors.ImageWrite
+		}
+		metrics.ImageCloneTotal.Add(1)
+	}
+
+	return "", ""
 }

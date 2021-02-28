@@ -25,10 +25,9 @@ spec:
       imagePullSecrets:
         - name: dockercred
       volumes:
-        - name: config.json
+        - name: dockerconfig
           secret:
             secretName: dockercred
-            defaultMode: 0400
       containers:
       - command:
         - /manager
@@ -41,9 +40,9 @@ spec:
             value: "/"
           - name: REPO_URL
             value: "docker.io/k8stest123"
-        volumeMounts:
-          - name: config.json
-            mountPath: "/"
+#        volumeMounts:
+#          - name: dockerconfig
+#            mountPath: "/"
         resources:
           limits:
             cpu: 100m

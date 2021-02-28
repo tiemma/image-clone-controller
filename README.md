@@ -26,7 +26,8 @@ For the DOCKER_CONFIG env, you can find a sample file to create it by running th
 You can then create a secret using the following command on the file previously obtained:
 ```bash
     # Change secret_name and config_path as necessary, config_path should be `$HOME/.docker/config.json`
-    kubectl create secret generic <secret_name> --from-file=.dockerconfigjson=<config_path> --type=kubernetes.io/dockerconfigjson
+    # secret_name should be dockercred as seen in the deployment spec
+    kubectl create secret generic dockercred -n image-clone-controller-system --from-file=.dockerconfigjson=<config_path> --type=kubernetes.io/dockerconfigjson
 ```
 
 Follow the instructions [here](https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-files-from-a-pod) to mount the secrets as a file
